@@ -4,6 +4,13 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             Hotels Map
         </h2>
+        <div id="status" style="margin:10px;font-weight:bold;"></div>
+
+<button id="locateBtn">
+    Find My Location
+</button>
+
+<div id="map" style="height:500px;"></div>
     </x-slot>
 
     <div class="p-6">

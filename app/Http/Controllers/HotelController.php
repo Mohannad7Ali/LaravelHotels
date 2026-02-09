@@ -34,4 +34,14 @@ class HotelController extends Controller
 
         return response()->json($hotel, 201);
     }
+    public function nearby(): JsonResponse
+    {
+        $lat = (float) request('lat');
+        $lng = (float) request('lng');
+
+        $hotels = $this->hotelService->getNearby($lat, $lng, 50);
+
+        return response()->json($hotels);
+    }
+
 }

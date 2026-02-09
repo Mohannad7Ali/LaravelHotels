@@ -29,5 +29,8 @@ Route::middleware(['auth'])->group(function () {
     Route::view('/map', 'map.index')->name('map.index');
 
 });
+Route::get('/hotels/nearby', [HotelController::class, 'nearby'])
+    ->middleware('auth');
+
 
 require __DIR__.'/auth.php';
