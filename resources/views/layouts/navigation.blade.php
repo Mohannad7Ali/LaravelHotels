@@ -15,7 +15,11 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                        <x-nav-link :href="route('map.index')" :active="request()->routeIs('map.index')">
+                        {{ __('Map') }}
+                </x-nav-link>
                 </div>
+
             </div>
 
             <!-- Settings Dropdown -->
@@ -70,6 +74,9 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+
+
         </div>
 
         <!-- Responsive Settings Options -->

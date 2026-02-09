@@ -27,7 +27,8 @@ class HotelService {
                 'stars',
                 'price_per_night'
             ])
-            ->get();
+            ->orderBy('stars', 'desc')->get()
+;
     }
 
     public function create(array $data): Hotel

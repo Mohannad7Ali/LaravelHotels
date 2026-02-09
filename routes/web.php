@@ -26,6 +26,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/hotels', [HotelController::class, 'store']);
 
+    Route::view('/map', 'map.index')->name('map.index');
+
 });
 
 require __DIR__.'/auth.php';
