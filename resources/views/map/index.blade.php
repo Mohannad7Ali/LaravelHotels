@@ -1,32 +1,72 @@
-<x-app-layout>
+@extends('layouts.app')
 
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Hotels Map
-        </h2>
-        <div id="status" style="margin:10px;font-weight:bold;"></div>
+@section('title', 'Hotels Map')
 
-<button id="locateBtn">
-    Find My Location
-</button>
+@section('navigation')
+    @include('layouts.navigation')
+@endsection
 
-<div id="map" style="height:500px;"></div>
-    </x-slot>
+@section('header')
+    <h2 class="font-semibold text-xl text-gray-800 leading-tight">Hotels Map</h2>
+@endsection
 
-    <div class="p-6">
-        <div id="map" style="height: 600px; border-radius: 12px;"></div>
+@section('content')
+<div class="p-6 space-y-4">
+
+    <!-- Status / Messages -->
+    <div id="status" class="font-semibold text-gray-700"></div>
+
+    <!-- Filters -->
+    <div class="flex flex-wrap gap-4 mb-4 items-center">
+        <select id="filterCity" class="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">All Cities</option>
+            <option value="Zurich">Zurich</option>
+            <option value="Geneva">Geneva</option>
+            <option value="Damascus">Damascus</option>
+            <option value="Dubai">Dubai</option>
+            <option value="Paris">Paris</option>
+        </select>
+
+        <select id="filterStars" class="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">All Stars</option>
+            <option value="5">5 ⭐</option>
+            <option value="4">4 ⭐</option>
+            <option value="3">3 ⭐</option>
+        </select>
+
+        <input id="searchName" type="text" placeholder="Search hotel..."
+            class="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[200px]" />
     </div>
 
-    @push('styles')
-        <link
-            rel="stylesheet"
-            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        />
-    @endpush
+    <!-- Map -->
+    <div id="map" class="w-full h-[600px] rounded-lg shadow-md"></div>
+</div>
+@endsection
 
-    @push('scripts')
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script src="{{ asset('js/map.js') }}"></script>
-    @endpush
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+@endpush
 
-</x-app-layout>
+@push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ asset('js/map.js') }}"></script>
+<script>
+    // Optional: placeholder if map.js not yet handling filters
+    // Example: trigger filtering on input changes
+    const filterCity = document.getElementById('filterCity');
+    const filterStars = document.getElementById('filterStars');
+    const searchName = document.getElementById('searchName');
+
+    filterCity.addEventListener('change', () => {
+        window.updateMapMarkers?.();
+    });
+
+    filterStars.addEventListener('change', () => {
+        window.updateMapMarkers?.();
+    });
+
+    searchName.addEventListener('input', () => {
+        window.updateMapMarkers?.();
+    });
+</script>
+@endpush
