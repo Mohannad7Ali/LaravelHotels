@@ -3,11 +3,15 @@
 namespace App\Services\Hotel;
 
 use App\Models\Hotel;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Collection;
 
-class HotelService {
-
-    //hotel-related business logic.
+class HotelService
+{
+    /**
+     * Get all hotels (for admin or listing)
+     */
     public function getAll(): Collection
     {
         return Hotel::query()
@@ -15,6 +19,9 @@ class HotelService {
             ->get();
     }
 
+    /**
+     * Get hotels for map display (select only needed fields)
+     */
     public function getForMap(): Collection
     {
         return Hotel::query()
@@ -27,17 +34,26 @@ class HotelService {
                 'stars',
                 'price_per_night'
             ])
-            ->orderBy('stars', 'desc')->get()
-;
+            ->orderBy('stars', 'desc')
+            ->get();
     }
 
+    /**
+     * Create a hotel
+     */
     public function create(array $data): Hotel
     {
         return Hotel::create($data);
     }
 
-    public function getNearby(float $lat, float $lng, float $radiusKm = 50)
+    /**
+     * Get nearby hotels
+     */
+    public function getNearby(float $lat, float $lng, float $radiusKm = 50): Collection
     {
+        // first sync with external API  to get latest hotels around the location
+        $this->syncExternalHotels($lat, $lng, $radiusKm);
+
         $hotels = Hotel::query()
             ->select([
                 'id',
@@ -50,6 +66,7 @@ class HotelService {
             ])
             ->get();
 
+        // filter hotels based on distance
         return $hotels->filter(function ($hotel) use ($lat, $lng, $radiusKm) {
             $distance = $this->distanceKm(
                 $lat,
@@ -57,34 +74,79 @@ class HotelService {
                 $hotel->latitude,
                 $hotel->longitude
             );
-
             return $distance <= $radiusKm;
         })->values();
     }
 
-    private function distanceKm(
-        float $lat1,
-        float $lon1,
-        float $lat2,
-        float $lon2
-    ): float {
+    /**
+     * sync hotels from external API (Geoapify) based on location and radius, and store in DB
+     */
+    private function syncExternalHotels(float $lat, float $lng, float $radiusKm = 50): void
+    {
+        $cacheKey = "geo_hotels_{$lat}_{$lng}_{$radiusKm}";
 
+        $externalHotels = Cache::remember($cacheKey, 300, function () use ($lat, $lng, $radiusKm) {
+            $response = Http::get('https://api.geoapify.com/v2/places', [
+                'categories' => 'accommodation.hotel',
+                'filter' => "circle:{$lng},{$lat}," . ($radiusKm * 1000),
+                'limit' => 20,
+                'apiKey' => config('services.geoapify.key'),
+            ]);
+
+            if (!$response->successful()) {
+                return [];
+            }
+
+            $data = $response->json();
+
+            return collect($data['features'] ?? [])
+                ->map(fn($item) => [
+                    'name' => $item['properties']['name'] ?? 'Hotel',
+                    'city' => $item['properties']['city'] ?? 'Unknown',
+                    'latitude' => $item['properties']['lat'],
+                    'longitude' => $item['properties']['lon'],
+                    'stars' => $item['properties']['rank'] ?? null,
+                    'price_per_night' => null, // API may not provide price
+                    'source' => 'external'
+                ])
+                ->toArray();
+        });
+
+        // save in db and avoid duplicates based on name and location
+        foreach ($externalHotels as $hotel) {
+            Hotel::updateOrCreate(
+                [
+                    'name' => $hotel['name'],
+                    'latitude' => $hotel['latitude'],
+                    'longitude' => $hotel['longitude'],
+                ],
+                [
+                    'city' => $hotel['city'],
+                    'stars' => $hotel['stars'],
+                    'price_per_night' => $hotel['price_per_night'],
+                    'source' => 'external'
+                ]
+            );
+        }
+    }
+
+    /**
+     * (Haversine) calc  distance between two lat/lng points in km
+     */
+    private function distanceKm(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
         $earthRadius = 6371;
 
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
 
-        $a =
-            sin($dLat/2) * sin($dLat/2) +
-            cos(deg2rad($lat1)) *
-            cos(deg2rad($lat2)) *
-            sin($dLon/2) *
-            sin($dLon/2);
+        $a = sin($dLat/2) ** 2 +
+             cos(deg2rad($lat1)) *
+             cos(deg2rad($lat2)) *
+             sin($dLon/2) ** 2;
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         return $earthRadius * $c;
     }
 }
-
-
