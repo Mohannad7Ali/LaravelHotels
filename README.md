@@ -33,7 +33,7 @@ An interactive web application that displays nearby hotels on a map using geoloc
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Mohannad7Ali/LaravelHotels.git
 cd map-auth-project
 ```
 
