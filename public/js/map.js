@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // إنشاء الخريطة
     const map = L.map("map").setView([46.8182, 8.2275], 7);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; OpenStreetMap contributors",
@@ -8,13 +7,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let hotelMarkers = [];
     let hotelsData = [];
 
-    // إزالة الماركرات القديمة
     function clearMarkers() {
         hotelMarkers.forEach((m) => map.removeLayer(m));
         hotelMarkers = [];
     }
 
-    // تحديث الخريطة بعد الفلاتر
     function updateMap() {
         const city = document.getElementById("filterCity").value;
         const stars = document.getElementById("filterStars").value;
@@ -41,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // تهيئة مستمعي الفلاتر
     function initFilters() {
         ["filterCity", "filterStars", "searchName"].forEach((id) => {
             document.getElementById(id).addEventListener("input", updateMap);
@@ -49,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // طلب إذن الموقع أولًا
     if (!navigator.geolocation) {
         document.getElementById("status").textContent =
             "Geolocation not supported.";
@@ -61,7 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
 
-            // ماركر المستخدم
             L.marker([lat, lng], {
                 icon: L.icon({
                     iconUrl:
@@ -77,7 +71,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             map.setView([lat, lng], 12);
 
-            // جلب الفنادق من Controller
             try {
                 const params = new URLSearchParams({ lat, lng });
                 const res = await fetch(`/hotels/nearby?${params}`);
@@ -88,7 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         "No nearby hotels found.";
                 }
 
-                // عرض الفنادق
                 updateMap();
                 initFilters();
             } catch (err) {
