@@ -1,79 +1,58 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // إنشاء الخريطة
     const map = L.map("map").setView([46.8182, 8.2275], 7);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap",
+        attribution: "&copy; OpenStreetMap contributors",
     }).addTo(map);
 
     let hotelMarkers = [];
+    let hotelsData = [];
 
+    // إزالة الماركرات القديمة
     function clearMarkers() {
         hotelMarkers.forEach((m) => map.removeLayer(m));
         hotelMarkers = [];
     }
 
-    async function loadHotels(lat, lng, filters = {}) {
-        const params = new URLSearchParams({ lat, lng });
-        const res = await fetch(`/hotels/nearby?${params}`);
-        let hotels = await res.json();
+    // تحديث الخريطة بعد الفلاتر
+    function updateMap() {
+        const city = document.getElementById("filterCity").value;
+        const stars = document.getElementById("filterStars").value;
+        const name = document.getElementById("searchName").value.toLowerCase();
 
-        if (hotels.length === 0) {
-            console.warn("No nearby hotels, loading fallback hotels");
-            alert("No nearby hotels found. Showing all hotels instead.");
-            const fallbackRes = await fetch(`/hotels/map-data`);
-            hotels = await fallbackRes.json();
-        }
+        let filtered = hotelsData;
 
-        // Apply client-side filters
-        if (filters.city) {
-            hotels = hotels.filter((h) => h.city === filters.city);
-        }
-        if (filters.stars) {
-            hotels = hotels.filter((h) => h.stars == filters.stars);
-        }
-        if (filters.name) {
-            hotels = hotels.filter((h) =>
-                h.name.toLowerCase().includes(filters.name.toLowerCase()),
+        if (city) filtered = filtered.filter((h) => h.city === city);
+        if (stars) filtered = filtered.filter((h) => h.stars == stars);
+        if (name)
+            filtered = filtered.filter((h) =>
+                h.name.toLowerCase().includes(name),
             );
-        }
 
         clearMarkers();
 
-        hotels.forEach((h) => {
+        filtered.forEach((h) => {
             const marker = L.marker([h.latitude, h.longitude])
                 .addTo(map)
                 .bindPopup(
-                    `<strong>${h.name}</strong><br>${h.city}<br>${h.stars} ⭐`,
+                    `<strong>${h.name}</strong><br>${h.city}<br>${h.stars ? h.stars + " ⭐" : ""}`,
                 );
             hotelMarkers.push(marker);
         });
     }
 
-    function initFilters(lat, lng) {
-        const cityEl = document.getElementById("filterCity");
-        const starsEl = document.getElementById("filterStars");
-        const nameEl = document.getElementById("searchName");
-
-        [cityEl, starsEl].forEach((el) =>
-            el.addEventListener("change", () =>
-                loadHotels(lat, lng, {
-                    city: cityEl.value,
-                    stars: starsEl.value,
-                    name: nameEl.value,
-                }),
-            ),
-        );
-
-        nameEl.addEventListener("input", () =>
-            loadHotels(lat, lng, {
-                city: cityEl.value,
-                stars: starsEl.value,
-                name: nameEl.value,
-            }),
-        );
+    // تهيئة مستمعي الفلاتر
+    function initFilters() {
+        ["filterCity", "filterStars", "searchName"].forEach((id) => {
+            document.getElementById(id).addEventListener("input", updateMap);
+            document.getElementById(id).addEventListener("change", updateMap);
+        });
     }
 
+    // طلب إذن الموقع أولًا
     if (!navigator.geolocation) {
-        alert("Geolocation not supported");
+        document.getElementById("status").textContent =
+            "Geolocation not supported.";
         return;
     }
 
@@ -82,20 +61,46 @@ document.addEventListener("DOMContentLoaded", () => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
 
-            L.marker([lat, lng])
+            // ماركر المستخدم
+            L.marker([lat, lng], {
+                icon: L.icon({
+                    iconUrl:
+                        "https://cdn-icons-png.flaticon.com/512/64/64113.png",
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32],
+                }),
+            })
                 .addTo(map)
                 .bindPopup("You are here")
                 .openPopup();
 
-            map.setView([lat, lng], 11);
+            map.setView([lat, lng], 12);
 
-            initFilters(lat, lng);
+            // جلب الفنادق من Controller
+            try {
+                const params = new URLSearchParams({ lat, lng });
+                const res = await fetch(`/hotels/nearby?${params}`);
+                hotelsData = await res.json();
 
-            loadHotels(lat, lng);
+                if (!hotelsData.length) {
+                    document.getElementById("status").textContent =
+                        "No nearby hotels found.";
+                }
+
+                // عرض الفنادق
+                updateMap();
+                initFilters();
+            } catch (err) {
+                console.error("Error fetching hotels:", err);
+                document.getElementById("status").textContent =
+                    "Failed to load hotels.";
+            }
         },
         (error) => {
             console.error(error);
-            alert("Location permission denied. Cannot show nearby hotels.");
+            document.getElementById("status").textContent =
+                "Location permission denied. Cannot show nearby hotels.";
         },
     );
 });

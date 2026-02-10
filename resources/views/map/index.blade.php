@@ -7,7 +7,7 @@
 @endsection
 
 @section('header')
-    <h2 class="font-semibold text-xl text-gray-800 leading-tight">Hotels Map</h2>
+<h2 class="font-semibold text-xl text-gray-800 leading-tight">Hotels Map</h2>
 @endsection
 
 @section('content')
@@ -19,7 +19,7 @@
     <!-- Filters -->
     <div class="flex flex-wrap gap-4 mb-4 items-center">
         <select id="filterCity" class="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-            <option value="">All Cities</option>
+            <option value="">Cities</option>
             <option value="Zurich">Zurich</option>
             <option value="Geneva">Geneva</option>
             <option value="Damascus">Damascus</option>
@@ -28,7 +28,7 @@
         </select>
 
         <select id="filterStars" class="border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-            <option value="">All Stars</option>
+            <option value="">Stars   </option>
             <option value="5">5 ⭐</option>
             <option value="4">4 ⭐</option>
             <option value="3">3 ⭐</option>
@@ -50,23 +50,4 @@
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('js/map.js') }}"></script>
-<script>
-    // Optional: placeholder if map.js not yet handling filters
-    // Example: trigger filtering on input changes
-    const filterCity = document.getElementById('filterCity');
-    const filterStars = document.getElementById('filterStars');
-    const searchName = document.getElementById('searchName');
-
-    filterCity.addEventListener('change', () => {
-        window.updateMapMarkers?.();
-    });
-
-    filterStars.addEventListener('change', () => {
-        window.updateMapMarkers?.();
-    });
-
-    searchName.addEventListener('input', () => {
-        window.updateMapMarkers?.();
-    });
-</script>
 @endpush

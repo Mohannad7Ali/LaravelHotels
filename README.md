@@ -1,59 +1,130 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Hotels Map Application
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+An interactive web application that displays nearby hotels on a map using geolocation and external APIs.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- User Registration & Login (Laravel Breeze)
+- Interactive map showing nearby hotels
+- Browser-based geolocation permission
+- Nearby hotels calculation using Haversine formula
+- Filter hotels by city and star rating
+- Search hotels by name
+- External hotel data fetched from Geoapify Places API
+- Automatic syncing and caching in local database
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Tech Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- Laravel 12
+- Blade Templates
+- Vanilla JavaScript
+- Leaflet JS
+- SQLite / MySQL
+- Geoapify Places API
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Installation & Setup
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1️⃣ Clone Repository
 
-### Premium Partners
+```bash
+git clone <your-repo-url>
+cd map-auth-project
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2️⃣ Install PHP Dependencies
 
-## Contributing
+```bash
+composer install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3️⃣ Install Node Dependencies & Build Assets
 
-## Code of Conduct
+```bash
+npm install
+npm run dev
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4️⃣ Configure Environment
 
-## Security Vulnerabilities
+Copy .env.example:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+cp .env.example .env
+```
 
-## License
+Generate application key:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan key:generate
+```
+
+Configure database in .env:
+
+```bash
+DB_CONNECTION=mysql
+DB_DATABASE=your_database
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Add your Geoapify API key:
+
+```bash
+GEOAPIFY_KEY=your_geoapify_api_key_here
+```
+
+### 5️⃣ Run Migrations & Seed Database
+
+```bash
+php artisan migrate --seed
+```
+
+### 6️⃣ Start Laravel Server
+
+```bash
+php artisan serve
+```
+
+### 7️⃣ Open Application
+
+Open in browser:
+
+```bash
+http://127.0.0.1:8000
+```
+
+Register / Login
+Access the interactive map at:
+
+```bash
+http://127.0.0.1:8000/map
+```
+
+## Architecture
+
+- MVC architecture with Service Layer
+- Lightweight controllers focused on request handling
+- Business logic implemented inside `HotelService`
+- Form Requests used for input validation
+- Integration between external APIs and local database caching
+- Blade templates combined with Vanilla JavaScript for UI
+- Client-side filtering and searching for better performance
+
+---
+
+## How Geoapify Integration Works
+
+1. User opens the map page
+2. Browser requests geolocation permission
+3. User location coordinates are obtained
+4. `HotelService` calls the Geoapify Places API
+5. Nearby hotels are fetched within the specified radius
+6. Retrieved data is cached in the database for 5 minutes
+7. Hotels are displayed on the Leaflet map using markers
+8. Users can filter and search results in real time

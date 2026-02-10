@@ -5,6 +5,7 @@ namespace App\Services\Hotel;
 use App\Models\Hotel;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Collection;
 
 class HotelService
@@ -81,8 +82,15 @@ class HotelService
     /**
      * sync hotels from external API (Geoapify) based on location and radius, and store in DB
      */
-    private function syncExternalHotels(float $lat, float $lng, float $radiusKm = 50): void
+    private function syncExternalHotels(float $lat, float $lng, float $radiusKm = 150): void
     {
+        $apiKey = config('services.geoapify.key');
+
+    if (!$apiKey) {
+        info("Geoapify API Key is missing!");
+        return ;
+    }
+        try{
         $cacheKey = "geo_hotels_{$lat}_{$lng}_{$radiusKm}";
 
         $externalHotels = Cache::remember($cacheKey, 300, function () use ($lat, $lng, $radiusKm) {
@@ -105,9 +113,8 @@ class HotelService
                     'city' => $item['properties']['city'] ?? 'Unknown',
                     'latitude' => $item['properties']['lat'],
                     'longitude' => $item['properties']['lon'],
-                    'stars' => $item['properties']['rank'] ?? null,
-                    'price_per_night' => null, // API may not provide price
-                    'source' => 'external'
+                    'stars' => $item['properties']['rank'] ?? 3,
+                    'price_per_night' => 1000, // API may not provide price
                 ])
                 ->toArray();
         });
@@ -122,12 +129,15 @@ class HotelService
                 ],
                 [
                     'city' => $hotel['city'],
-                    'stars' => $hotel['stars'],
-                    'price_per_night' => $hotel['price_per_night'],
+                    'stars' => $hotel['stars'] ?? 3,
+                    'price_per_night' => $hotel['price_per_night'] ?? 1000,
                     'source' => 'external'
                 ]
             );
         }
+        }catch (\Exception $e) {
+            info("Failed to sync hotels: " . $e->getMessage());
+    }
     }
 
     /**
